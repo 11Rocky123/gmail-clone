@@ -6,15 +6,34 @@ import ChevronLeftIcon from "@material-ui/icons/ChevronLeft";
 import ChevronRightIcon from "@material-ui/icons/ChevronRight";
 import KeyboardHideIcon from "@material-ui/icons/KeyboardHide";
 import SettingsIcon from "@material-ui/icons/Settings";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import "./EmailList.css";
 import Section from "./Section";
 import InboxIcon from "@material-ui/icons/Inbox";
 import PeopleIcon from "@material-ui/icons/People";
 import LocalOfferIcon from "@material-ui/icons/LocalOffer";
 import EmailRow from "./EmailRow";
+import { db } from "./firebase";
 
 function EmailList() {
+	const [emails, setEmails] = useState([]);
+
+	useEffect(() => {
+		db.collection("emails") // uzimi emails kolekciju
+			.orderBy("timestamp", "desc") // rapsoredi ih po timestampu
+			.onSnapshot((
+				snapshot // uzmi snapshot trenutni
+			) =>
+				setEmails(
+					// stavi mail da bude ovo
+					snapshot.docs.map((doc) => ({
+						id: doc.id, // id = doc.id nDqpnWjBpy....
+						data: doc.data(), // ovo je zapravo message,subject,to itd..
+					}))
+				)
+			);
+	}, []);
+
 	return (
 		<div className="emailList">
 			<div className="emailList__settings">
@@ -52,18 +71,16 @@ function EmailList() {
 			</div>
 
 			<div className="emailList__list">
-				<EmailRow
-					title="Gmail"
-					subject="Welcome to Gmail"
-					description="Real Gmail"
-					time="6pm"
-				/>
-				<EmailRow
-					title="Gmail"
-					subject="Welcome to Gmail"
-					description="Real Gmail"
-					time="6pm"
-				/>
+				{emails.map(({ id, data: { to, subject, message, timestamp } }) => (
+					<EmailRow
+						id={id}
+						key={id}
+						title={to}
+						subject={subject}
+						description={message}
+						time={new Date(timestamp?.seconds * 1000).toUTCString()}
+					/>
+				))}
 			</div>
 		</div>
 	);
