@@ -6,8 +6,10 @@ import StarBorderOutlinedIcon from "@material-ui/icons/StarBorderOutlined";
 import { useHistory } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { selectMail } from "./features/mailSlice";
+import { db } from "./firebase";
+import StarIcon from "@material-ui/icons/Star";
 
-function EmailRow({ id, title, subject, description, time }) {
+function EmailRow({ id, starred, to, subject, description, time }) {
 	const history = useHistory();
 	const dispatch = useDispatch();
 
@@ -15,7 +17,8 @@ function EmailRow({ id, title, subject, description, time }) {
 		dispatch(
 			selectMail({
 				id,
-				title,
+				starred,
+				to,
 				subject,
 				description,
 				time,
@@ -24,19 +27,38 @@ function EmailRow({ id, title, subject, description, time }) {
 		history.push("/mail");
 	};
 
+	const addToStarSection = () => {
+		db.collection("emails").doc(id).update({
+			starred: !starred,
+		});
+		if (starred == false) {
+			db.collection("starEmails").doc(id).set({
+				to: to,
+				subject: subject,
+				message: description,
+				timestamp: time,
+				starred: !starred,
+			});
+		} else {
+			db.collection("starEmails").doc(id).delete();
+		}
+	};
+
 	return (
-		<div onClick={openMail} className="emailRow">
+		<div className="emailRow">
 			<div className="emailRow__options">
 				<Checkbox />
-				<IconButton>
-					<StarBorderOutlinedIcon />
+				<IconButton onClick={addToStarSection}>
+					{starred ? <StarIcon /> : <StarBorderOutlinedIcon />}
 				</IconButton>
 				<IconButton>
 					<LabelImportantOutlinedIcon />
 				</IconButton>
 			</div>
+			{/* onClick={openMail} */}
+
 			<div className="emailRow__title">
-				<h3 className="emailRow__title">{title}</h3>
+				<h3 className="emailRow__title">{to}</h3>
 			</div>
 			<div className="emailRow__message">
 				<h4>

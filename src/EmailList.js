@@ -14,25 +14,37 @@ import PeopleIcon from "@material-ui/icons/People";
 import LocalOfferIcon from "@material-ui/icons/LocalOffer";
 import EmailRow from "./EmailRow";
 import { db } from "./firebase";
+import { setInbox, setStarred, section } from "./features/sectionSlicer";
+import { useSelector } from "react-redux";
+import { useHistory } from "react-router-dom";
+
+const readData = (sectionChange, setEmails) => {
+	db.collection(sectionChange) // uzimi emails kolekciju
+		.orderBy("timestamp", "desc") // rapsoredi ih po timestampu
+		.onSnapshot((
+			snapshot // uzmi snapshot trenutni
+		) =>
+			setEmails(
+				// stavi mail da bude ovo
+				snapshot.docs.map((doc) => ({
+					id: doc.id, // id = doc.id nDqpnWjBpy....
+					data: doc.data(), // ovo je zapravo message,subject,to itd..
+				}))
+			)
+		);
+	console.log("I read base:", sectionChange);
+};
 
 function EmailList() {
+	const sectionChange = useSelector(section);
 	const [emails, setEmails] = useState([]);
+	const history = useHistory();
+
+	history.push(`/${sectionChange}`);
 
 	useEffect(() => {
-		db.collection("emails") // uzimi emails kolekciju
-			.orderBy("timestamp", "desc") // rapsoredi ih po timestampu
-			.onSnapshot((
-				snapshot // uzmi snapshot trenutni
-			) =>
-				setEmails(
-					// stavi mail da bude ovo
-					snapshot.docs.map((doc) => ({
-						id: doc.id, // id = doc.id nDqpnWjBpy....
-						data: doc.data(), // ovo je zapravo message,subject,to itd..
-					}))
-				)
-			);
-	}, []);
+		readData(sectionChange, setEmails);
+	}, [sectionChange]);
 
 	return (
 		<div className="emailList">
@@ -71,16 +83,19 @@ function EmailList() {
 			</div>
 
 			<div className="emailList__list">
-				{emails.map(({ id, data: { to, subject, message, timestamp } }) => (
-					<EmailRow
-						id={id}
-						key={id}
-						title={to}
-						subject={subject}
-						description={message}
-						time={new Date(timestamp?.seconds * 1000).toUTCString()}
-					/>
-				))}
+				{emails.map(
+					({ id, data: { to, subject, message, starred, timestamp } }) => (
+						<EmailRow
+							id={id}
+							key={id}
+							starred={starred}
+							to={to}
+							subject={subject}
+							description={message}
+							time="0"
+						/>
+					)
+				)}
 			</div>
 		</div>
 	);

@@ -19,3 +19,15 @@
 	display: flex;
 	justify-content: center;
 }
+
+.test > * {
+	background-color: #fcecec !important;
+	color: #c04b37 !important;
+	font-weight: 800 !important;
+}
+
+.sidebar__option:hover {
+	background-color: whitesmoke;
+	border-top-right-radius: 20px;
+	border-bottom-right-radius: 20px;
+}
